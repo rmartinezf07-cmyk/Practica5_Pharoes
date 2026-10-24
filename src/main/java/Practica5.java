@@ -31,7 +31,11 @@ public class Practica5 {
 
         // 3. Escribir CSV
         escribirCSV(dias, nubosidades, usos);
-        System.out.println("¡Archivo datos.csv generado correctamente!");
+
+        // 4. Generar Dashboard HTML
+        generarDashboardDesdeCSV();
+
+        System.out.println("¡Listo! Se han generado datos.csv y dashboard.html correctamente.");
     }
 
     static RespuestaOpenMeteo obtenerDatosMeteorologicos() throws Exception {
@@ -68,5 +72,71 @@ public class Practica5 {
                     .append(usos.get(i)).append("\n");
         }
         Files.writeString(Path.of("datos.csv"), sb.toString());
+    }
+
+    // --- MÉTODO 4: LEER CSV Y GENERAR EL HTML ---
+    static void generarDashboardDesdeCSV() throws Exception {
+        List<String> lineas = Files.readAllLines(Path.of("datos.csv"));
+
+        List<String> dias = new ArrayList<>();
+        List<String> nubs = new ArrayList<>();
+        List<String> usos = new ArrayList<>();
+
+        // Saltamos la cabecera (i = 1)
+        for (int i = 1; i < lineas.size(); i++) {
+            String[] partes = lineas.get(i).split(",");
+            dias.add("'" + partes[0] + "'"); // comillas simples para JS
+            nubs.add(partes[1]);
+            usos.add(partes[2]);
+        }
+
+        String diasJS = String.join(", ", dias);
+        String nubsJS = String.join(", ", nubs);
+        String usosJS = String.join(", ", usos);
+
+        // Plantilla HTML con los gráficos de ECharts
+        String html = """
+                <!DOCTYPE html>
+                <html lang="es">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Dashboard Uso de Iluminación</title>
+                    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+                </head>
+                <body>
+                    <h2 style="text-align:center">Nubosidad media diaria</h2>
+                    <div id="grafico-nubosidad" style="width:100%%; height:400px;"></div>
+
+                    <h2 style="text-align:center">Uso estimado de iluminación</h2>
+                    <div id="grafico-uso" style="width:100%%; height:400px;"></div>
+
+                    <script>
+                        var dias = [%s];
+                        var nubosidades = [%s];
+                        var usos = [%s];
+
+                        var chartNub = echarts.init(document.getElementById('grafico-nubosidad'));
+                        chartNub.setOption({
+                            title: { text: 'Nubosidad media (%%)' },
+                            tooltip: {},
+                            xAxis: { type: 'category', data: dias, name: 'Día' },
+                            yAxis: { type: 'value', name: '%%' },
+                            series: [{ type: 'line', data: nubosidades, name: 'Nubosidad' }]
+                        });
+
+                        var chartUso = echarts.init(document.getElementById('grafico-uso'));
+                        chartUso.setOption({
+                            title: { text: 'Uso de iluminación (kWh)' },
+                            tooltip: {},
+                            xAxis: { type: 'category', data: dias, name: 'Día' },
+                            yAxis: { type: 'value', name: 'kWh' },
+                            series: [{ type: 'bar', data: usos, name: 'Uso' }]
+                        });
+                    </script>
+                </body>
+                </html>
+                """.formatted(diasJS, nubsJS, usosJS);
+
+        Files.writeString(Path.of("dashboard.html"), html);
     }
 }
