@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Practica5 {
@@ -20,10 +21,12 @@ public class Practica5 {
     }
 
     public static void main(String[] args) throws Exception {
-        // 1. Obtener datos
         RespuestaOpenMeteo respuesta = obtenerDatosMeteorologicos();
-        System.out.println("Días obtenidos: " + respuesta.daily.time);
-        System.out.println("Nubosidad: " + respuesta.daily.cloudCoverMean);
+        List<Double> nubosidades = respuesta.daily.cloudCoverMean;
+
+        List<Double> usos = calcularUsoIluminacion(nubosidades);
+        System.out.println("Nubosidades: " + nubosidades);
+        System.out.println("Usos calculados: " + usos);
     }
 
     static RespuestaOpenMeteo obtenerDatosMeteorologicos() throws Exception {
@@ -37,5 +40,17 @@ public class Practica5 {
 
         Gson gson = new Gson();
         return gson.fromJson(response.body(), RespuestaOpenMeteo.class);
+    }
+
+    static List<Double> calcularUsoIluminacion(List<Double> nubosidades) {
+        List<Double> usos = new ArrayList<>();
+        for (double nub : nubosidades) {
+            if (nub >= 50) {
+                usos.add((nub - 50) * 0.5);
+            } else {
+                usos.add(0.0);
+            }
+        }
+        return usos;
     }
 }
