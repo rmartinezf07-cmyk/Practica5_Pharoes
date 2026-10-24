@@ -5,6 +5,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,11 +24,14 @@ public class Practica5 {
 
     public static void main(String[] args) throws Exception {
         RespuestaOpenMeteo respuesta = obtenerDatosMeteorologicos();
+        List<String> dias = respuesta.daily.time;
         List<Double> nubosidades = respuesta.daily.cloudCoverMean;
 
         List<Double> usos = calcularUsoIluminacion(nubosidades);
-        System.out.println("Nubosidades: " + nubosidades);
-        System.out.println("Usos calculados: " + usos);
+
+        // 3. Escribir CSV
+        escribirCSV(dias, nubosidades, usos);
+        System.out.println("¡Archivo datos.csv generado correctamente!");
     }
 
     static RespuestaOpenMeteo obtenerDatosMeteorologicos() throws Exception {
@@ -52,5 +57,16 @@ public class Practica5 {
             }
         }
         return usos;
+    }
+
+    // --- MÉTODO 3: GUARDAR CSV ---
+    static void escribirCSV(List<String> dias, List<Double> nubs, List<Double> usos) throws Exception {
+        StringBuilder sb = new StringBuilder("Dia,Nubosidad_media,Uso_iluminacion_kWh\n");
+        for (int i = 0; i < dias.size(); i++) {
+            sb.append(dias.get(i)).append(",")
+                    .append(nubs.get(i)).append(",")
+                    .append(usos.get(i)).append("\n");
+        }
+        Files.writeString(Path.of("datos.csv"), sb.toString());
     }
 }
