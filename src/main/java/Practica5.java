@@ -82,7 +82,7 @@ public class Practica5 {
         List<String> nubs = new ArrayList<>();
         List<String> usos = new ArrayList<>();
 
-        // Saltamos la cabecera (i = 1)
+        // Saltar la cabecera (i = 1)
         for (int i = 1; i < lineas.size(); i++) {
             String[] partes = lineas.get(i).split(",");
             dias.add("'" + partes[0] + "'"); // comillas simples para JS
